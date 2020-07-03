@@ -1,0 +1,80 @@
+<?php
+
+namespace App\Http\Middleware;
+
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken as Middleware;
+
+class VerifyCsrfToken extends Middleware
+{
+    /**
+     * The URIs that should be excluded from CSRF verification.
+*
+     * @var array
+     */
+    protected $except = [
+    	
+                '/mobilesendshopmail',
+                'https://shop.sympies.net/',
+                'https://shop.sympies.net/mobilesendshopmail',
+                '/mobilelogin',
+                '/mobilelcheckemail',
+                '/mobilecheckpnumb',
+                '/mobileloginwithfacebook',
+                '/mobileaddfriends',
+	        '/mobilegetsamefeed',
+
+                 '/mobilegethashtags',
+
+		'/mobilefindcircles',
+		'/mobilefindfollowers',
+		'/mobilefindfollowersmycircle',
+		'/mobilefindfollowing',
+		'/mobilefindgetyou',
+		'/mobilegetfriendrequest',
+                '/mobilemakefriends',
+
+                '/mobilesearchimotion',
+
+                '/mobilesearchpeopleexact',
+
+                '/mobilesearchbypost',
+                '/mobilesearchpeople',
+                '/mobilefollowpublicaccount',
+
+		'/mobilegetcommentator',
+		'/mobilegetcommentbody',
+		'/mobilepostcomment',
+		'/mobilegettopcomments',
+		'/mobilegetfeed',
+		'/mobileigetyoumakeprocess',
+		'/mobilegetfeedspecuser',
+                '/mobilegetmydaysfeed',
+		'/mobilegetmessageslist',
+		'/mobilegetmessages',
+		'/mobilegetnotifications',
+		'/mobilegetotherprofile',
+		'/mobilelivenotification',
+		'/mobilegetprofiledetails',
+		'/mobilegetpost',
+		'/mobilegetpostwithcomments',
+                '/mobiledeletepost',
+
+                '/mobileupdatecomment',
+
+		'/mobilegetflashsales',
+
+		'/mobilegetitemcategories',
+		'/mobilegetitemsonmarket',
+		'/mobilegetitemsonmarketcart',
+		'/mobilegetitemsonmarketchocolate',
+		'/mobilegetitemsonmarketflower',
+		'/mobilegetitemsonmarketstufftoys',
+		'/mobilegetproductdetails',
+		'/mobilegettopgiftedperson',
+		'/mobilegettopitems',
+		'/mobilegettopitemsuserprovide',
+		'/mobilegetuserdetailsinmarket',
+		'/mobilegetreporttypes'
+
+    ];
+}

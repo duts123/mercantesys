@@ -1,0 +1,163 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Cryptor;
+use App\Decryptor;
+use App\Encryptor;
+use DB;
+
+class MobileGetMessagesController extends Controller
+{
+    public function getMessageList()
+    {
+        db::select("CALL insert_enckey();");
+        $keypasswordres = db::select("CALL get_enckey();");
+        foreach ($keypasswordres as $row) { $keypassword = $row->key_password; }
+        db::select("CALL drop_enckey();");
+
+        $encusername = trim($_POST['username']);
+        $cryptor = new Decryptor;
+        $username = $cryptor->decrypt($encusername, $keypassword);
+
+    	$feedcontent = COLLECT(\DB::SELECT("select tcr_chatroomid,
+
+(select tcrm_messagecontent from t_chat_rooms_messages where tcrm_messageid = (select max(tcrm_messageid) from t_chat_rooms_messages where tcrm_chatroomid = tcr_chatroomid)) lastmessage,
+
+(select rac_username from r_account_credentials where rac_accountid = (select tcrm_messenger from t_chat_rooms_messages where tcrm_messageid = (select max(tcrm_messageid) from t_chat_rooms_messages where tcrm_chatroomid = tcr_chatroomid))) lastsender,
+
+DATE_FORMAT((select tcrm_messagetimestamp from t_chat_rooms_messages where tcrm_messageid = (select max(tcrm_messageid) from t_chat_rooms_messages where tcrm_chatroomid = tcr_chatroomid)),'%M %d, %Y')  messagedate,
+
+(select rac_username from r_account_credentials where rac_accountid = tcr_creator) roomcreator,
+
+(select rac_profilepicture from r_account_credentials where rac_accountid = tcr_creator) creatorprofpic , 
+
+(select rac_username from r_account_credentials where rac_accountid = tcr_pairtowho) pairedtowho,
+
+(select rac_profilepicture from r_account_credentials where rac_accountid = tcr_pairtowho) pairedprofpic  
+
+from t_chat_rooms where tcr_creator = (select rac_accountid from r_account_credentials where rac_username = ?)  or tcr_pairtowho = (select rac_accountid from r_account_credentials where rac_username = ?)
+
+",[$username,$username]));
+
+    	$output = json_encode(array('messagelist' => $feedcontent ));
+		if($output == "") {
+            echo "";
+        }else {
+            echo $output;    
+        }
+    }
+
+    public function getMessages()
+ recievedate
+   {
+        db::select("CALL insert_enckey();");
+        $keypasswordres = db::select("CALL get_enckey();");
+        foreach ($keypasswordres as $row) { $keypassword = $row->key_password; }
+        db::select("CALL drop_enckey();");
+        
+        $encrecievername = trim($_POST['recievername']);
+        $encsendername = trim($_POST['sendername']);
+
+        $cryptor = new Decryptor;
+        $recievername = $cryptor->decrypt($encrecievername, $keypassword);
+        $sendername = $cryptor->decrypt($encsendername, $keypassword);
+
+    	$feedcontent = COLLECT(\DB::SELECT("select tcrm_messagecontent messagecontent, rac_profilepicture senderprofilepic, rac_username sendername, (select rac_username from r_account_credentials where rac_accountid = tcrm_reciver) recievername, (select rac_profilepicture from r_account_credentials where rac_accountid = tcrm_reciver) recieverprofilepic, DATE_FORMAT(tcrm_messagetimestamp,'%M %d, %Y') recievedate , (select tcr_chatroomid from t_chat_rooms where tcr_creator = (select rac_accountid from r_account_credentials where rac_username = '".$sendername."') and tcr_pairtowho in (select rac_accountid from r_account_credentials where rac_username = '".$recievername."') or tcr_creator = (select rac_accountid from r_account_credentials where rac_username = '".$recievername."') and tcr_pairtowho in (select rac_accountid from r_account_credentials where rac_username = '".$sendername."')) chatroomid  from t_chat_rooms_messages inner join r_account_credentials on r_account_credentials.rac_accountid = t_chat_rooms_messages.tcrm_messenger where tcrm_chatroomid=(select tcr_chatroomid from t_chat_rooms_messages where tcr_creator = (select rac_accountid from r_account_credentials where rac_username = ?) and tcr_pairtowho in (select rac_accountid from r_account_credentials where rac_username = ?) or tcr_creator = (select rac_accountid from r_account_credentials where rac_username = ?) and tcr_pairtowho in (select rac_accountid from r_account_credentials where rac_username = ?)) order by tcrm_messagetimestamp",[$sendername,$recievername,$recievername,$sendername]));
+
+    	$output = json_encode(array('messagecontent' => $feedcontent	));
+		if($output == "") {
+            echo "";
+        }else {
+            echo $output;    
+        }
+    }
+
+    public function postMessage(){
+   
+        db::select("CALL insert_enckey();");
+        $keypasswordres = db::select("CALL get_enckey();");
+        foreach ($keypasswordres as $row) { $keypassword = $row->key_password; }
+        db::select("CALL drop_enckey();");
+        
+        $senderuname = trim($_POST['senderuname']);
+        $reciveruname = trim($_POST['reciveruname']);
+        $messagecontent = trim($_POST['messagecontent']);
+        $cryptor = new Decryptor;
+
+        $esenderuname = $cryptor->decrypt($senderuname, $keypassword);
+        $ereciveruname = $cryptor->decrypt($reciveruname, $keypassword);
+        $emessagecontent = $cryptor->decrypt($messagecontent, $keypassword);
+        $result = \DB::SELECT("select tcr_chatroomid from t_chat_rooms_messages where tcr_creator  = (select rac_accountid from r_account_credentials where rac_username = ?) and tcr_pairtowho = (select rac_accountid from r_account_credentials where rac_username = ?) or tcr_creator  = (select rac_accountid from r_account_credentials where rac_username = ?) and tcr_pairtowho = (select rac_accountid from r_account_credentials where rac_username = ?)", [$esenderuname, $ereciveruname, $ereciveruname,$esenderuname]);
+        if(count($result)) {
+          $result = \DB::SELECT("INSERT INTO `t_chat_rooms_messages` (`tcr_chatroomid`, `tcr_chatroomname`, `tcr_dateadded`, `tcr_creator`, `tcr_pairtowho`, `tcr_roomtype`) VALUES (NULL, concat('Private ', ? , '-', ? ), current_timestamp(), (select rac_accountid from r_account_credentials where rac_username = ?), (select rac_accountid from r_account_credentials where rac_username = ?), 1)", [$esenderuname, $ereciveruname, $esenderuname,$ereciveruname]);
+        }
+        else {
+            $info = "false";
+        }
+
+        $result = \DB::SELECT("insert into t_chat_rooms_messages VALUES (null ,(select tcr_chatroomid from t_chat_rooms_messages where tcr_creator = (select rac_accountid from r_account_credentials where rac_username = ?) and tcr_pairtowho in (select rac_accountid from r_account_credentials where rac_username = ?) or tcr_creator = (select rac_accountid from r_account_credentials where rac_username = ?) and tcr_pairtowho in (select rac_accountid from r_account_credentials where rac_username = ?)),?,CURRENT_TIMESTAMP, (select rac_accountid from r_account_credentials where rac_username = ?), (select rac_accountid from r_account_credentials where rac_username = ?),0)", [$esenderuname, $ereciveruname, $ereciveruname,$esenderuname,$emessagecontent,$esenderuname,$ereciveruname]);
+       echo ("sent");
+    }
+
+     public function addtocircle(){
+   
+        db::select("CALL insert_enckey();");
+        $keypasswordres = db::select("CALL get_enckey();");
+        foreach ($keypasswordres as $row) { $keypassword = $row->key_password; }
+        db::select("CALL drop_enckey();");
+        
+        $circlecenter = trim($_POST['circlecenter']);
+        $circlepoint = trim($_POST['circlepoint']);
+       
+        $cryptor = new Decryptor;
+
+        $ecirclecenter = $cryptor->decrypt($circlecenter, $keypassword);
+        $ecirclepoint = $cryptor->decrypt($circlepoint, $keypassword);
+        
+        $result = \DB::SELECT("INSERT INTO `r_messages_mycircle` (`rmmc_circleid`, `rmmc_circlecenter`, `rmmc_circlepoint`, `rmmc_circledcreated`) VALUES (NULL, (select rac_accountid from r_account_credentials where rac_username = ?), (select rac_accountid from r_account_credentials where rac_username = ?), current_timestamp())", [$ecirclecenter, $ecirclepoint]);
+        
+       echo ("added");
+    }
+
+    
+
+    public function findNearby(){
+   
+        db::select("CALL insert_enckey();");
+        $keypasswordres = db::select("CALL get_enckey();");
+        foreach ($keypasswordres as $row) { $keypassword = $row->key_password; }
+        db::select("CALL drop_enckey();");
+        
+        $actor = trim($_POST['actor']);
+        $lat = trim($_POST['lat']);
+        $long = trim($_POST['long']);
+        $cryptor = new Decryptor;
+
+        $eactor = $cryptor->decrypt($actor, $keypassword);
+        $elat = $cryptor->decrypt($lat, $keypassword);
+        $elong = $cryptor->decrypt($long, $keypassword);
+        $result = \DB::SELECT("select count(rac_accountid) as COUNT_ID from r_social_nearby INNER JOIN r_account_credentials on r_account_credentials.rac_accountid = rsn_userid  where rac_username= ?", [$eactor]);
+        if($result != 0) {
+          $result = \DB::SELECT("update r_social_nearby INNER JOIN r_account_credentials on r_account_credentials.rac_accountid = rsn_userid  set rsn_latitude = ? , rsn_longhitude = ? where rac_username = ?", [$elat, $elong, $eactor]);
+        }
+        else {
+            $result = \DB::SELECT("INSERT INTO r_social_nearby(rsn_userid,rsn_latitude,rsn_longhitude) VALUES((SELECT  rac_accountid from r_account_credentials where rac_username = ?),?,?)", [$eactor, $elat, $elong]);
+        }
+
+        $feedcontent = \DB::COLLECT("select rsn_userid ,rac_username, rac_profilepicture, ROUND( (6371 * acos( cos( radians(?) ) * cos( radians(rsn_latitude) ) * cos( radians(rsn_longhitude) - radians(?)) + sin(radians(?)) * sin( radians(rsn_latitude)))), 3) AS distance from r_social_nearby INNER JOIN r_account_credentials on r_account_credentials.rac_accountid = rsn_userid where (select ROUND( (6371 * acos( cos( radians(?) ) * cos( radians(rsn_latitude) ) * cos( radians(rsn_longhitude) - radians(?)) + sin(radians(?)) * sin( radians(rsn_latitude)))), 3)) < 5 and rac_username != ? limit 8 ", [$elat, $elong, $elat,$elat,$elong,$elat,$eactor]);
+     
+     $output = json_encode(array('nearbylist' => $feedcontent   ));
+        if($output == "") {
+            echo "";
+        }else {
+            echo $output;    
+        }
+    }
+
+    
+
+}
+
+

@@ -1,0 +1,6 @@
+--2020-02-24 09:20:50--  https://github-production-repository-file-5c1aeb.s3.amazonaws.com/235059802/4132934?X-Amz-Algorithm=AWS4-HMAC-SHA256
+Resolving github-production-repository-file-5c1aeb.s3.amazonaws.com (github-production-repository-file-5c1aeb.s3.amazonaws.com)... 52.216.10.3
+Connecting to github-production-repository-file-5c1aeb.s3.amazonaws.com (github-production-repository-file-5c1aeb.s3.amazonaws.com)|52.216.10.3|:443... connected.
+HTTP request sent, awaiting response... 400 Bad Request
+2020-02-24 09:20:50 ERROR 400: Bad Request.
+
